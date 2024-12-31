@@ -98,48 +98,34 @@ void loop() {
     while(1);  // Stop the program after data logging completes
   }
 
-  // Verify Datalog file is accessible
-  if (SD.mediaPresent("SD_Test.csv")) {
+  // Verify SD is accessible and start data logging
+  if (SD.mediaPresent()) {
     // Calculate the timestamp (in seconds) since the program started
     unsigned long timestamp = millis() / 1000;  // `millis()` returns milliseconds, so divide by 1000 to get seconds
 
     dataFile.print(timestamp);               // Write the timestamp
     dataFile.print(",");
 
-    // Take a reading from the BMP388 sensor
+    // Attempt to take a reading from the BMP388 sensor
     if (bmp.performReading()) {
-      dataFile.print(bmp.temperature);
-      dataFile.print(",");   
-      dataFile.print(bmp.pressure / 100.0);
-      dataFile.print(",");   
-      dataFile.println(bmp.readAltitude(SEALEVELPRESSURE_HPA));
+      // If reading can be  taken, write the sensor data to the SD card in CSV format
+      dataFile.print(bmp.temperature);         // Write the temperature in Celsius
+      dataFile.print(",");                     // CSV delimiter
+      dataFile.print(bmp.pressure / 100.0);    // Write the pressure in hPa (Pa to hPa conversion)
+      dataFile.print(",");                     // CSV delimiter
+      dataFile.println(bmp.readAltitude(SEALEVELPRESSURE_HPA));  // Write the calculated altitude in meters   
+      digitalWrite(redPin, LOW);    // Turn off red LED
+      digitalWrite(greenPin, HIGH);   // Turn on green LED for successful logging
     } else {
-      // If reading fails, print an error message and proceed
-      Serial.println("Failed to read BMP388!");
-      char temperature = '-';
-      char pressure = '-';
-      char altitude = '-';
-      dataFile.print(temperature);
-      dataFile.print(",");   
-      dataFile.print(pressure);
-      dataFile.print(",");   
-      dataFile.println(altitude);
+      // If reading fails, print an error message and halt the program
+      Serial.println("Failed to read BMP Sensor!");
+      digitalWrite(greenPin, LOW); // Ensure green LED is off
+      digitalWrite(redPin, HIGH); // Make sure red LED is on
+      while(1);
     }
 
     // Addition Here (this will make sense later in the section)
 
-
-    // Turn status LED green if all sensors are connected
-    if (bmp.performReading()) {
-     digitalWrite(redPin, LOW);    // Turn off red LED
-     digitalWrite(greenPin, HIGH);   // Turn on green LED to make yellow
-    }
-
-    // Turn status LED red if none of the sensors is not connected
-    if (!bmp.performReading()) {
-     digitalWrite(redPin, HIGH);    // Turn on red LED to 
-     digitalWrite(greenPin, LOW);   // Turn off green LED
-    }
 
   } else {
     Serial.println("Error writing to SD_Test.csv, SD card may be removed");
