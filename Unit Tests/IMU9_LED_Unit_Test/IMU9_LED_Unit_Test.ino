@@ -90,7 +90,6 @@ void setup()
 }
 
 void loop() {
-
   // Check if 1 minute has passed
   if (millis() - startTime >= 60000) {  // 1 minute in milliseconds
     dataFile.close();  // Close the file
@@ -102,8 +101,8 @@ void loop() {
     while (1);  // Stop the program
   }
 
-  // Log data to the file if the SD file can be found
-  if (SD.exists("IMU_data.csv")) {
+  // Verify SD can be accessed and log data to it
+  if (SD.mediaPresent()) {
     // Calculate the timestamp (in seconds) since the program started
     unsigned long timestamp = millis() / 1000;  // `millis()` returns milliseconds, so divide by 1000 to get seconds
 
