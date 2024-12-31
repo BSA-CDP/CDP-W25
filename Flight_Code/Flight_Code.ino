@@ -67,13 +67,14 @@ void setup() {
     while (1);  // Infinite loop to stop the program
   }
 
-  Wire.begin();
-  delay(10);  // Brief delay after initializing
+  Wire1.begin(); // Initialize I2C communication over second pair of I2C Teensy pins
 
-  if (!bmp.begin_I2C()) {  
-    logFile.println("Failed to initialize BMP388!");
+  // Initialize the BMP388 sensor with I2C communication
+  if (!bmp.begin_I2C(0x77, &Wire1)) {  // Uses second pair of I2C pins for Teensy 4.1
+    // If sensor initialization fails, print an error message and halt execution
+    Serial.println("Failed to detect and initialize BMP388 on startup!");
     digitalWrite(redPin, HIGH);
-    while (1);
+    while (1);  // Infinite loop to stop the program
   }
 
   // Set oversampling and filter settings
@@ -82,19 +83,16 @@ void setup() {
   bmp.setIIRFilterCoeff(BMP3_IIR_FILTER_COEFF_3);
   bmp.setOutputDataRate(BMP3_ODR_100_HZ);
 
-  Wire1.begin();
-  delay(10);  // Brief delay after initializing
-
-  // Set the I2C bus to Wire1 for IMU and magnetometer
-  imu.setBus(&Wire1); // Configure LSM6 to use Wire1
-
-  // Initialize IMU (LIS3MDL and LSM6) using Wire
+  Wire.begin(); // Initialize I2C communication for IMU
+  
+  // Initialize IMU (LIS3MDL and LSM6)
   if (!imu.init() || !mag.init()) {
-    logFile.println("Failed to initialize IMU sensors!");
+    Serial.println("Failed to detect IMU sensor on startup!");
     digitalWrite(redPin, HIGH);
-    while (1);
+    while (1); // Halt if IMU initialization fails
   }
 
+  // Default LIS3MDL and LSM6 settings
   mag.enableDefault(); // Enable default settings for the magnetometer
   imu.enableDefault();
 
@@ -106,12 +104,11 @@ void setup() {
 }
 
 void loop() {
-  // Check if 10 minutes has passed
+  // Check if 20 minutes has passed
   if (millis() - startTime >= ***Fill_In_Here***) { // 20 minutes in milliseconds
     dataFile.close();
     logFile.println("20 minutes has passed. Stopping the data logging.");
     logFile.close();
-    digitalWrite(LED_BUILTIN, LOW);  // turn the LED off (HIGH is the voltage level)
     digitalWrite(redPin, LOW);  // Turn off red LED
     digitalWrite(greenPin, LOW);  // Turn off green LED
     digitalWrite(bluePin, HIGH);   // Turn on blue LED
